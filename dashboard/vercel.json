@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://tech-debt-auditor-backend.onrender.com/api/:path*"
+      "destination": "https://tech-debt-auditor-production.up.railway.app/api/:path*"
     }
   ]
 }
