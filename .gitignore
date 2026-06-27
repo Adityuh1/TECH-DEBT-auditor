@@ -210,3 +210,6 @@ coverage/
 # Optional: ignore package-lock.json if you prefer (keep it for consistency)
 # package-lock.json
 # dashboard/package-lock.json
+
+# Temporary audit repository downloads
+/temp-audits/

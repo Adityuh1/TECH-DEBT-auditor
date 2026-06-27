@@ -1,5 +1,5 @@
-import React from 'react';
-import { TrendingUp, User, Clock, Code } from 'lucide-react';
+import React, { useState } from 'react';
+import { TrendingUp, User, Clock, Code, Copy, Check, Lightbulb } from 'lucide-react';
 
 // Maps our AI & fallback categories to high-end Tailwind badge colors dynamically
 const categoryStyles = {
@@ -18,6 +18,8 @@ const categoryStyles = {
  */
 export function DebtCard({ item }) {
   const isHighRisk = item.riskScore >= 7;
+  const [showFix, setShowFix] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   // Calculate how long this debt item has existed
   const createdDate = new Date(item.createdAt);
@@ -28,6 +30,13 @@ export function DebtCard({ item }) {
   // Clean up the category key for lookup (e.g. "Security" -> "security")
   const catKey = (item.category || 'todo').toLowerCase();
   const badgeStyle = categoryStyles[catKey] || 'bg-zinc-150 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-350 dark:border-zinc-700/50';
+
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(item.fixSuggestion);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className={`flex flex-col justify-between bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 p-6 rounded-xl min-h-[270px] box-border transition-all duration-300 ${
@@ -55,9 +64,37 @@ export function DebtCard({ item }) {
         <p className="text-zinc-900 dark:text-zinc-100 font-bold mb-2 text-left italic leading-relaxed text-sm">
           "{item.comment}"
         </p>
-        <p className="text-xs text-zinc-600 dark:text-zinc-450 text-left leading-relaxed">
+        <p className="text-xs text-zinc-650 dark:text-zinc-400 text-left leading-relaxed">
           {item.explanation}
         </p>
+
+        {/* Collapsible Suggestion Drawer */}
+        {item.fixSuggestion && (
+          <div className="mt-4 text-left">
+            <button
+              onClick={() => setShowFix(!showFix)}
+              className="flex items-center gap-1 text-[11px] font-bold text-indigo-650 dark:text-indigo-400 hover:text-indigo-850 dark:hover:text-indigo-300 transition-colors cursor-pointer"
+            >
+              <Lightbulb size={12} className="shrink-0" />
+              <span>{showFix ? 'Hide Suggested Fix' : '💡 View Suggested Fix'}</span>
+            </button>
+
+            {showFix && (
+              <div className="relative mt-2.5 p-3 bg-zinc-55 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-850 rounded-xl text-left shadow-inner">
+                <button
+                  onClick={handleCopy}
+                  className="absolute top-2 right-2 p-1.5 bg-white dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-800 hover:border-zinc-350 dark:hover:border-zinc-700 text-zinc-500 dark:text-zinc-400 rounded-lg transition-all cursor-pointer shadow-sm"
+                  title="Copy code to clipboard"
+                >
+                  {copied ? <Check size={11} className="text-green-600 dark:text-green-500" /> : <Copy size={11} />}
+                </button>
+                <pre className="text-[10px] font-mono text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap pr-8 leading-relaxed">
+                  <code>{item.fixSuggestion}</code>
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom Metadata Panel */}

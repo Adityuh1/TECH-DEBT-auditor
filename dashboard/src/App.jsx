@@ -2,10 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ShieldAlert, Activity, Folder, Sun, Moon } from 'lucide-react';
 
 // Import our modular Presenter sub-components (Separation of Concerns)
-import { LoadingScreen, ErrorScreen } from './components/StateScreens';
+import { LoadingScreen, ErrorScreen, InitialScreen } from './components/StateScreens';
 import { MetricCards } from './components/MetricCards';
 import { FilterPanel } from './components/FilterPanel';
 import { DebtCard } from './components/DebtCard';
+import { AuditForm } from './components/AuditForm';
 
 /**
  * THE CENTRAL CONTROLLER
@@ -18,8 +19,13 @@ export default function App() {
 
   // Central data states
   const [debts, setDebts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasAudited, setHasAudited] = useState(false);
+
+  // Repository input states
+  const [repoUrl, setRepoUrl] = useState('');
+  const [gitToken, setGitToken] = useState('');
 
   // Active filter states controlled by the user
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,25 +33,38 @@ export default function App() {
   const [selectedAuthor, setSelectedAuthor] = useState('ALL');
   const [sortBy, setSortBy] = useState('RISK_DESC');
 
-  // Load audit findings cache on mount
-  useEffect(() => {
-    fetch('/findings.json')
+  // Trigger POST API call to trigger repository audit on backend
+  const handleAuditSubmit = () => {
+    if (!repoUrl) return;
+    setLoading(true);
+    setError(null);
+
+    fetch('/api/audit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ repoUrl, gitToken })
+    })
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Findings cache database not found.');
+          return response.json().then((data) => {
+            throw new Error(data.error || data.details || 'Failed to analyze repository.');
+          });
         }
         return response.json();
       })
       .then((data) => {
-        setDebts(data);
+        setDebts(data.findings);
+        setHasAudited(true);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Error fetching findings:', err);
+        console.error('Audit failed:', err);
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  };
 
   // Compute list of unique author names dynamically for filter options
   const uniqueAuthors = useMemo(() => {
@@ -123,11 +142,11 @@ export default function App() {
     );
   }
 
-  // Render modular error page if database is missing
+  // Render modular error page if audit fails
   if (error) {
     return (
       <div className={isDark ? 'dark' : ''}>
-        <ErrorScreen error={error} />
+        <ErrorScreen error={error} onReset={() => { setError(null); setHasAudited(false); }} />
       </div>
     );
   }
@@ -171,40 +190,55 @@ export default function App() {
             </div>
           </header>
 
-          {/* SUMMARY METRICS CARDS (Modular) */}
-          <MetricCards metrics={metrics} />
-
-          {/* SEARCH & FILTERS PANEL (Modular) */}
-          <FilterPanel
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedAuthor={selectedAuthor}
-            setSelectedAuthor={setSelectedAuthor}
-            uniqueAuthors={uniqueAuthors}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            filteredCount={processedDebts.length}
-            totalCount={debts.length}
+          {/* REPOSITORY INPUT AUDIT PANEL */}
+          <AuditForm 
+            repoUrl={repoUrl}
+            setRepoUrl={setRepoUrl}
+            gitToken={gitToken}
+            setGitToken={setGitToken}
+            onAuditSubmit={handleAuditSubmit}
           />
 
-          {/* DIAGNOSTIC CARD GRID */}
-          {processedDebts.length > 0 ? (
-            <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {processedDebts.map((item, index) => (
-                <DebtCard key={`${item.file}-${item.line}-${index}`} item={item} />
-              ))}
-            </main>
+          {hasAudited ? (
+            <>
+              {/* SUMMARY METRICS CARDS (Modular) */}
+              <MetricCards metrics={metrics} />
+
+              {/* SEARCH & FILTERS PANEL (Modular) */}
+              <FilterPanel
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedAuthor={selectedAuthor}
+                setSelectedAuthor={setSelectedAuthor}
+                uniqueAuthors={uniqueAuthors}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                filteredCount={processedDebts.length}
+                totalCount={debts.length}
+              />
+
+              {/* DIAGNOSTIC CARD GRID */}
+              {processedDebts.length > 0 ? (
+                <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {processedDebts.map((item, index) => (
+                    <DebtCard key={`${item.file}-${item.line}-${index}`} item={item} />
+                  ))}
+                </main>
+              ) : (
+                /* Empty State Display */
+                <main className="flex flex-col items-center justify-center p-16 bg-white dark:bg-zinc-900/10 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-center max-w-lg mx-auto w-full my-6 shadow-sm">
+                  <Folder size={44} className="text-zinc-400 dark:text-zinc-700 mb-3" />
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-300 mb-1">No findings match your criteria</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Try adjusting your search queries, choosing a different category pill, or selecting another developer author.
+                  </p>
+                </main>
+              )}
+            </>
           ) : (
-            /* Empty State Display */
-            <main className="flex flex-col items-center justify-center p-16 bg-white dark:bg-zinc-900/10 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-center max-w-lg mx-auto w-full my-6 shadow-sm">
-              <Folder size={44} className="text-zinc-400 dark:text-zinc-700 mb-3" />
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-300 mb-1">No findings match your criteria</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Try adjusting your search queries, choosing a different category pill, or selecting another developer author.
-              </p>
-            </main>
+            <InitialScreen />
           )}
 
           {/* FOOTER */}
