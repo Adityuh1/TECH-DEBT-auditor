@@ -1,0 +1,3 @@
+# Tell Railway's Nixpacks builder to install git CLI in the container setup phase
+[phases.setup]
+nixPkgs = ["...", "git"]
