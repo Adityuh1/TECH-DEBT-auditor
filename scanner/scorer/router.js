@@ -23,9 +23,20 @@ async function auditComment(category, comment, commitDateString) {
         
         const localResult = calculateRiskAndExplanationLocal(category, comment, commitDateString);
         
+        // Map raw comments to standard categories so the frontend filters work in local fallback mode
+        let mappedCategory = 'MAINTENANCE';
+        const commentLower = comment.toLowerCase();
+        if (commentLower.includes('key') || commentLower.includes('token') || commentLower.includes('password') || commentLower.includes('secret')) {
+            mappedCategory = 'SECURITY';
+        } else if (commentLower.includes('perf') || commentLower.includes('speed') || commentLower.includes('slow') || commentLower.includes('optim') || commentLower.includes('cache') || commentLower.includes('memory') || commentLower.includes('leak')) {
+            mappedCategory = 'PERFORMANCE';
+        } else if (category === 'TODO') {
+            mappedCategory = 'FEATURE';
+        }
+        
         return {
             riskScore: localResult.riskScore,
-            aiCategory: category, // TODO, FIXME, HACK
+            aiCategory: mappedCategory,
             explanation: localResult.explanation,
             fixSuggestion: localResult.fixSuggestion
         };
