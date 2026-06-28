@@ -30,7 +30,7 @@ async function scanFileForDebt(file, directory) {
             const comment = match[2].trim();
 
             // Fire git blame check and scorer in background (Task 25 will optimize concurrency)
-            const promise = ActiveVCSAdapter.getLineHistory(relativePath, lineNumber).then(async ({ author, commitDate }) => {
+            const promise = ActiveVCSAdapter.getLineHistory(relativePath, lineNumber, directory).then(async ({ author, commitDate }) => {
                 const auditResult = await auditComment(category, comment, commitDate);
                 
                 fileDebts.push({

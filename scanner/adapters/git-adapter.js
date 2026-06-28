@@ -9,7 +9,7 @@ const execPromise = util.promisify(exec);
  * (VCS operations will be implemented here in Tasks 12-14)
  */
 const GitAdapter = {
-    async getLineHistory(relativePath, lineNumber) {
+    async getLineHistory(relativePath, lineNumber, repoPath) {
         let author = "Unknown";
         let commitDate = new Date().toISOString();
 
@@ -17,7 +17,8 @@ const GitAdapter = {
             // Execute the Git blame CLI command on a single line number
             // --porcelain outputs details in key-value structure
             const { stdout } = await execPromise(
-                `git blame -L ${lineNumber},${lineNumber} --porcelain ${relativePath}`
+                `git blame -L ${lineNumber},${lineNumber} --porcelain ${relativePath}`,
+                repoPath ? { cwd: repoPath } : {}
             );
 
             // Extract the author name and the commit epoch timestamp (seconds since 1970)
@@ -31,7 +32,7 @@ const GitAdapter = {
             }
         } catch (error) {
             // Fallback if the file or line is not yet committed to Git
-            console.log(`⚠️ Git blame skipped for uncommitted line in ${relativePath}`);
+            console.log(`⚠️ Git blame failed for line in ${relativePath}: ${error.message}`);
         }
 
         return { author, commitDate };
