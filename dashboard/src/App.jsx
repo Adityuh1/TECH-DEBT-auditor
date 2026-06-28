@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ShieldAlert, Activity, Folder, Sun, Moon } from 'lucide-react';
+import { ShieldAlert, Activity, Folder, Sun, Moon, Star } from 'lucide-react';
 
 // Import our modular Presenter sub-components (Separation of Concerns)
 import { LoadingScreen, ErrorScreen, InitialScreen } from './components/StateScreens';
@@ -185,7 +185,18 @@ export default function App() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3.5 w-full md:w-auto justify-end">
+            <div className="flex flex-wrap items-center gap-3.5 w-full md:w-auto justify-end">
+              {/* Star on GitHub Button */}
+              <a
+                href="https://github.com/Adityuh1/TECH-DEBT-auditor"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-750 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-950/60 shadow-sm transition-all"
+              >
+                <Star size={14} className="text-amber-500 fill-amber-500/10" />
+                <span>Star on GitHub</span>
+              </a>
+
               {/* Local Cache Badge */}
               <div className="flex items-center gap-2 bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-xs font-mono text-zinc-650 dark:text-zinc-400 shadow-sm">
                 <Activity size={12} className="text-green-600 dark:text-green-500 animate-pulse" />
