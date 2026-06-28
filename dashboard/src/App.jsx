@@ -39,7 +39,11 @@ export default function App() {
     setLoading(true);
     setError(null);
 
-    fetch('/api/audit', {
+    const apiBase = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? ''
+      : 'https://tech-debt-auditor-production.up.railway.app';
+
+    fetch(`${apiBase}/api/audit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
