@@ -247,7 +247,7 @@ export default function App() {
               {processedDebts.length > 0 ? (
                 <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {processedDebts.map((item, index) => (
-                    <DebtCard key={`${item.file}-${item.line}-${index}`} item={item} />
+                    <DebtCard key={`${item.file}-${item.line}-${index}`} item={item} repoUrl={repoUrl}/>
                   ))}
                 </main>
               ) : (
