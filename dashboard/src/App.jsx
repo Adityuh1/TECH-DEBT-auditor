@@ -17,6 +17,15 @@ export default function App() {
   // Theme state: defaults to dark theme (true)
   const [isDark, setIsDark] = useState(true);
 
+  // Sync dark mode class on HTML document root element
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
   // Central data states
   const [debts, setDebts] = useState([]);
   const [loading, setLoading] = useState(false);
