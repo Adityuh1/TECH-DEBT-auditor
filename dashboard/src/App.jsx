@@ -92,7 +92,7 @@ export default function App() {
 
     // Category Filter
     if (selectedCategory !== 'ALL') {
-      result = result.filter(item => item.category === selectedCategory);
+      result = result.filter(item => item.category?.toUpperCase() === selectedCategory.toUpperCase());
     }
 
     // Author Filter
